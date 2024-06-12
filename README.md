@@ -22,4 +22,4 @@ pnpm dev
 - Puppeteer
 
 # Notes
-File System only works on development mode, you can't access the screenshots result if you are not in development mode. Please use Cloud Storage to save the screenshots results instead of using the Serverless Function Storage
+File System only works on development mode, you can't access the screenshots result if you are not in development mode. Please use Cloud Storage to save the screenshots results instead of using the Serverless Function Storage# rynek-frontend
