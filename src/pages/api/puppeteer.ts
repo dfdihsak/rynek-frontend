@@ -2,68 +2,59 @@
 
 import fs from 'fs';
 import validURL from 'valid-url';
-import { randomUUID } from 'crypto';
 import { NextApiRequest, NextApiResponse } from 'next';
+// Puppeteer extra is a wrapper around puppeteer,
+import puppeteer from 'puppeteer-extra';
 
-import setupBrowser from '../../utils/setupBrowser';
+const POSHMARK_EMAIL: string = 'luckydaisiespress@gmail.com';
+const POSHMARK_PASSWORD: string = 'luckylucky1';
+// Load item details from item.json
+const item = {
+    "title": "purple skirt",
+    "description": "worn once ships from boston",
+    "originalPrice": "20",
+    "listingPrice": "10",
+    "sizeSelector": "0",
+    "imagePath": "/Users/angelasu/Desktop/rynek-backend/images/purpleskirt.png",
+    "categorySelector": "Women",
+    "subcategorySelector": "Skirts"
+};
+
+function delay(time: number) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-
-    const method = req.method;
-
     try {
-        switch (method) {
+    const browser = await puppeteer.launch({ headless: false }); // Launch browser in non-headless mode
+        const page = await browser.newPage();
 
-            case "GET": {
-                const url = req.query?.url;
+        // Rotate User-Agent
+        const userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        ];
+        const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+        await page.setUserAgent(randomUserAgent);
 
-                /**
-                 * Check if the URL is valid
-                 */
-                if (!url || typeof url !== "string" || !validURL.isUri(url)) return res.status(400).json({ msg: "URL is required" });
+        await page.goto('https://poshmark.com/login');
 
-                // Create the puppeteer instance
-                const { browser, page } = await setupBrowser();
+        // Enter login credentials
+        await page.type('#login_form_username_email', POSHMARK_EMAIL);
+        await delay(1000 + Math.floor(Math.random() * 2000)); // Random delay
+        await page.type('#login_form_password', POSHMARK_PASSWORD);
+        await delay(1000 + Math.floor(Math.random() * 2000)); // Random delay
 
-                // Navigate to the URL
-                await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 });
+        // Click the login button
+        await page.click('button[type="submit"]');
 
-                // Generate a random filename to make sure Next.js Image component doesn't cache the image
-                const filename = randomUUID();
+        // Wait for navigation to complete
+        await page.waitForNavigation();
+        await delay(2000 + Math.floor(Math.random() * 3000)); // Random delay
 
-                // Create the screenshot folder if it doesn't exist
-                const folderPath = `./public/screenshots`;
-                if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath);
-
-                // Store the filepath to a variable
-                const filePath = `${folderPath}/${filename}.jpeg`;
-
-                // Take the screenshot
-                await page.screenshot({
-                    path: filePath,
-                    quality: 100,
-                    type: "jpeg",
-                    // You can also use fullPage: true
-                    fullPage: false,
-                });
-
-                // Close the browser after taking the screenshot
-                await browser.close();
-
-                // Return the response of the screenshot URL
-                return res.send({ data: filePath.replace("./public", "") });
-            }
-
-            default:
-                // Method not allowed
-                return res.status(405).send({ msg: "Method Not Allowed!" });
-        }
-    } catch (error: any) {
-        // Handler error;
-        console.error(error.message);
-
-        // Never send the error message to the client. It's a security risk.
-        return res.status(500).send({ msg: "An error occured. Please try again!", error: error.message });
+        console.log('login ok');
+    } catch (error) {
+        console.error('Error:', error);
     }
-
 }

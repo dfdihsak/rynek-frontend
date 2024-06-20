@@ -5,7 +5,6 @@ import { FormEvent, useState } from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
 
-import ResultComponent from "../components/ResultComponent";
 import { IFetchingState } from "../types";
 
 const fetchingStateInit: IFetchingState = {
@@ -15,17 +14,17 @@ const fetchingStateInit: IFetchingState = {
 };
 
 const Home: NextPage = () => {
-  const [siteURL, setSiteURL] = useState("");
+  const [email, setEmail] = useState("");
   const [fetchingState, setFetchingState] = useState(fetchingStateInit);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!siteURL) return;
+    if (!email) return;
 
     setFetchingState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const resp = await fetch(`/api/puppeteer?url=${siteURL}`, {
+      const resp = await fetch(`/api/puppeteer?url=${email}`, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -48,17 +47,15 @@ const Home: NextPage = () => {
   return (
     <div className="mx-auto my-auto flex items-center justify-center h-screen flex-col space-y-5">
       <Head>
-        <title>Nextjs Puppeteer</title>
-        <meta name="description" content="Screenshot any Website" />
+        <title>Rynek Test Web App</title>
+        <meta name="description" content="Description meta here" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center max-w-2xl">
         <h1 className="text-5xl font-bold text-indigo-500">
-          Find an Image of Any Website
+          Rynek
         </h1>
-
-        {siteURL && <ResultComponent state={fetchingState} siteURL={siteURL} />}
 
         <form
           onSubmit={onSubmit}
@@ -66,9 +63,9 @@ const Home: NextPage = () => {
         >
           <input
             type="text"
-            value={siteURL}
-            onChange={(e) => setSiteURL(e.target.value)}
-            placeholder="Paste your website URL here"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Poshmark email"
             className="rounded-md w-full text-sm"
             autoComplete="on"
           />
@@ -77,7 +74,7 @@ const Home: NextPage = () => {
             type="submit"
             className="px-10 py-3 bg-indigo-500 text-sm rounded-full text-white hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Search!
+            Post!
           </button>
         </form>
       </main>
